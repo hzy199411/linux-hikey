@@ -208,7 +208,7 @@ void __init efi_init(void)
 	struct efi_fdt_params params;
 
 	/* Grab UEFI information placed in FDT by stub */
-	if (!efi_get_fdt_params(&params, uefi_debug))
+	if (!efi_get_fdt_params(&params))
 		return;
 
 	efi_system_table = params.system_table;
