@@ -260,4 +260,32 @@
                         heap-type = "ion_cma";
                 };
         };
+
+	firmware {
+		optee {
+			compatible = "linaro,optee-tz";
+			method = "smc";
+		};
+		android {
+			compatible = "android,firmware";
+			fstab {
+				compatible = "android,fstab";
+				system {
+					compatible = "android,system";
+					dev = "/dev/block/platform/f723d000.dwmmc0/by-name/system";
+					type = "ext4";
+					mnt_flags = "ro" ;
+					fsmgr_flags = "wait";
+				};
+				vendor {
+					compatible = "android,vendor";
+					dev = "/dev/block/platform/f723d000.dwmmc0/by-name/vendor";
+					type = "ext4";
+					mnt_flags = "ro" ;
+					fsmgr_flags = "wait";
+				};
+			};
+		};
+	};
 };
+
