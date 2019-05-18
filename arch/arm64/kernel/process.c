@@ -151,9 +151,15 @@ void machine_restart(char *cmd)
 
 	/* Now call the architecture specific reboot code. */
 	if (arm_pm_restart)
+	{
+		printk("arm_pm_restart=%pS\n", arm_pm_restart);
+		dump_stack();
 		arm_pm_restart(reboot_mode, cmd);
+	}
 	else
+	{
 		do_kernel_restart(cmd);
+	}
 
 	/*
 	 * Whoops - the architecture was unable to reboot.
