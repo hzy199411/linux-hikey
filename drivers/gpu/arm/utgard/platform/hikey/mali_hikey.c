@@ -28,9 +28,7 @@
 #include <linux/mm.h>
 #include <linux/of.h>
 
-#ifdef CONFIG_PM_RUNTIME
 #include <linux/pm_runtime.h>
-#endif
 #include <linux/fs.h>
 #include <linux/delay.h>
 #include <linux/version.h>
@@ -162,6 +160,7 @@ static int mali_clock_on(void)
 static void mali_clock_off(void)
 {
 	clk_disable_unprepare(mali_clk_g3d);
+	clk_disable_unprepare(mali_pclk_g3d);
 }
 
 static int mali_domain_powerup_finish(void)
@@ -216,10 +215,8 @@ static int mali_regulator_enable(void)
 		return stat;
 
 	for (i = 0; i < 50; i++) {
-		unsigned int res = mali_reg_readl(
-			mali_soc_addr_table->soc_ao_sctrl_base_addr,
-			SOC_AO_SCTRL_SC_PW_MTCMOS_STAT0_ADDR(0), 1, 1);
-		if (res)
+		stat = regulator_is_enabled(mali_regulator);
+		if (stat > 0)
 			break;
 		udelay(1);
 	}
@@ -260,8 +257,6 @@ static int mali_regulator_disable(void)
 {
 	mali_reg_writel(mali_soc_addr_table->soc_media_sctrl_base_addr,
 			SOC_MEDIA_SCTRL_SC_MEDIA_RSTEN_ADDR(0), 0, 0, 1);
-	mali_reg_writel(mali_soc_addr_table->soc_media_sctrl_base_addr,
-			SOC_MEDIA_SCTRL_SC_MEDIA_CLKDIS_ADDR(0), 1, 1, 1);
 	mali_reg_writel(mali_soc_addr_table->soc_ao_sctrl_base_addr,
 			SOC_AO_SCTRL_SC_PW_CLKDIS0_ADDR(0), 1, 1, 1);
 	mali_reg_writel(mali_soc_addr_table->soc_ao_sctrl_base_addr,
@@ -638,9 +633,6 @@ int mali_platform_device_init(struct platform_device *pdev)
 	pdev->dev.type = &mali_gpu_device_device_type;
 	pdev->dev.platform_data = &mali_gpu_data;
 	pdev->dev.dma_mask = &pdev->dev.coherent_dma_mask;
-#if defined(CONFIG_ARM64)
-	pdev->dev.archdata.dma_ops = dma_ops;
-#endif
 	mali_np = pdev->dev.of_node;
 
 	if (mali_get_gpu_type() != MALI_CORE_450_MP4) {
